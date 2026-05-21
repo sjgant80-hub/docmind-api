@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DocMind API — AI Document Intelligence</title>
+<meta name="description" content="Upload receipts, invoices, bank statements, contracts. Get structured JSON. One API. Any LLM provider.">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#09090b;--surface:#18181b;--surface2:#27272a;--border:#3f3f46;--text:#fafafa;--muted:#a1a1aa;--accent:#6366f1;--accent2:#818cf8;--green:#22c55e;--amber:#f59e0b;--red:#ef4444}
+body{background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased}
+.container{max-width:1100px;margin:0 auto;padding:0 24px}
+
+/* Hero */
+.hero{padding:80px 0 60px;text-align:center}
+.hero-badge{display:inline-block;padding:6px 16px;border-radius:20px;border:1px solid var(--accent);color:var(--accent2);font-size:12px;font-weight:500;letter-spacing:.04em;margin-bottom:24px;background:rgba(99,102,241,.08)}
+h1{font-size:clamp(36px,6vw,56px);font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:16px}
+h1 span{background:linear-gradient(135deg,var(--accent),var(--accent2),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero p{font-size:18px;color:var(--muted);max-width:600px;margin:0 auto 32px;font-weight:300}
+.cta-row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn{padding:12px 28px;border-radius:8px;font-size:14px;font-weight:600;text-decoration:none;transition:all .2s;cursor:pointer;border:none;font-family:inherit}
+.btn-primary{background:var(--accent);color:#fff}.btn-primary:hover{background:var(--accent2);transform:translateY(-1px)}
+.btn-secondary{background:var(--surface);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent)}
+
+/* Code example */
+.code-section{padding:40px 0 60px}
+.code-tabs{display:flex;gap:4px;margin-bottom:0}
+.code-tab{padding:8px 16px;border-radius:8px 8px 0 0;background:var(--surface2);color:var(--muted);font-size:12px;cursor:pointer;border:none;font-family:inherit;font-weight:500}
+.code-tab.active{background:var(--surface);color:var(--text)}
+.code-block{background:var(--surface);border:1px solid var(--border);border-radius:0 8px 8px 8px;padding:24px;overflow-x:auto}
+.code-block pre{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.7;color:var(--muted)}
+.code-block .str{color:var(--green)}.code-block .key{color:var(--accent2)}.code-block .num{color:var(--amber)}.code-block .cmt{color:#52525b}
+
+/* Features */
+.features{padding:60px 0;display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px}
+.feature{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:28px;transition:border-color .2s}
+.feature:hover{border-color:var(--accent)}
+.feature-icon{font-size:28px;margin-bottom:12px}
+.feature h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.feature p{font-size:14px;color:var(--muted);line-height:1.6}
+
+/* Pricing */
+.pricing{padding:60px 0}
+.pricing h2{text-align:center;font-size:32px;font-weight:700;margin-bottom:8px}
+.pricing .sub{text-align:center;color:var(--muted);margin-bottom:40px}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.price-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px;position:relative}
+.price-card.featured{border-color:var(--accent);box-shadow:0 0 40px rgba(99,102,241,.1)}
+.price-card .tier{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:8px}
+.price-card .price{font-size:36px;font-weight:800;margin-bottom:4px}
+.price-card .price span{font-size:14px;font-weight:400;color:var(--muted)}
+.price-card .desc{font-size:13px;color:var(--muted);margin-bottom:20px}
+.price-card ul{list-style:none;margin-bottom:24px}
+.price-card li{font-size:13px;padding:6px 0;color:var(--muted);position:relative;padding-left:20px}
+.price-card li::before{content:'';position:absolute;left:0;top:12px;width:6px;height:6px;border-radius:50%;background:var(--green)}
+.price-card .btn{width:100%;text-align:center;display:block}
+.tag{position:absolute;top:-10px;right:20px;background:var(--accent);color:#fff;font-size:10px;font-weight:600;padding:4px 12px;border-radius:10px;letter-spacing:.04em}
+
+/* Endpoints */
+.endpoints{padding:60px 0}
+.endpoints h2{font-size:28px;font-weight:700;margin-bottom:32px}
+.endpoint{background:var(--surface);border:1px solid var(--border);border-radius:8px;margin-bottom:12px;overflow:hidden}
+.endpoint-header{display:flex;align-items:center;gap:12px;padding:16px 20px;cursor:pointer}
+.endpoint-method{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;padding:4px 8px;border-radius:4px}
+.endpoint-method.post{background:rgba(34,197,94,.12);color:var(--green)}
+.endpoint-method.get{background:rgba(99,102,241,.12);color:var(--accent2)}
+.endpoint-method.delete{background:rgba(239,68,68,.12);color:var(--red)}
+.endpoint-path{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:500}
+.endpoint-desc{font-size:13px;color:var(--muted);margin-left:auto}
+
+/* Try it */
+.tryit{padding:60px 0}
+.tryit h2{font-size:28px;font-weight:700;margin-bottom:8px}
+.tryit .sub{color:var(--muted);margin-bottom:24px}
+.tryit-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:32px}
+.tryit-form{display:grid;gap:16px}
+.form-group label{display:block;font-size:12px;font-weight:500;color:var(--muted);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.form-group input,.form-group select,.form-group textarea{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:var(--text);font-family:inherit;font-size:14px}
+.form-group textarea{min-height:100px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:12px}
+.form-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+#tryResult{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:20px;margin-top:20px;display:none;max-height:500px;overflow-y:auto}
+#tryResult pre{font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;white-space:pre-wrap;word-break:break-all}
+
+footer{padding:40px 0;text-align:center;border-top:1px solid var(--border);margin-top:60px}
+footer p{font-size:13px;color:var(--muted)}
+
+@media(max-width:768px){
+  .form-row{grid-template-columns:1fr}
+  .endpoint-desc{display:none}
+  .hero{padding:40px 0 30px}
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<div class="hero">
+  <div class="hero-badge">v1.0 — now live</div>
+  <h1>Documents in.<br><span>Structured data out.</span></h1>
+  <p>Upload receipts, invoices, bank statements, contracts. Get clean JSON back. One API call. Any LLM provider. Usage-based pricing.</p>
+  <div class="cta-row">
+    <a href="#tryit" class="btn btn-primary">Try it free</a>
+    <a href="#endpoints" class="btn btn-secondary">API docs</a>
+  </div>
+</div>
+
+<!-- Code example -->
+<div class="code-section">
+  <div class="code-tabs">
+    <button class="code-tab active" onclick="showTab(0)">cURL</button>
+    <button class="code-tab" onclick="showTab(1)">Python</button>
+    <button class="code-tab" onclick="showTab(2)">Node.js</button>
+    <button class="code-tab" onclick="showTab(3)">Response</button>
+  </div>
+  <div class="code-block">
+    <pre id="codeDisplay"></pre>
+  </div>
+</div>
+
+<!-- Features -->
+<div class="features">
+  <div class="feature">
+    <div class="feature-icon">&#128451;</div>
+    <h3>5 Document Types</h3>
+    <p>Receipts, invoices, bank statements, contracts, and general documents. Each with a purpose-built extraction schema.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">&#9889;</div>
+    <h3>Multi-LLM Backend</h3>
+    <p>Anthropic, OpenAI, or Google. Automatic failover. Pick the best model for your budget. No vendor lock-in.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">&#128202;</div>
+    <h3>Structured JSON</h3>
+    <p>Every response is clean, typed JSON. Line items, VAT breakdowns, categorized transactions. Ready for your database.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">&#128247;</div>
+    <h3>Image + Text Input</h3>
+    <p>Upload photos, PDFs, or paste raw text. Vision models handle handwritten receipts, scanned invoices, screenshots.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">&#128640;</div>
+    <h3>Batch Processing</h3>
+    <p>Parse up to 20 documents in a single request. Perfect for bulk receipt processing or monthly statement runs.</p>
+  </div>
+  <div class="feature">
+    <div class="feature-icon">&#128274;</div>
+    <h3>Simple Auth</h3>
+    <p>API key auth. Rate limiting per tier. Usage tracking built in. Webhook support for real-time usage events.</p>
+  </div>
+</div>
+
+<!-- Pricing -->
+<div class="pricing" id="pricing">
+  <h2>Simple pricing</h2>
+  <p class="sub">Pay for what you use. No contracts. Cancel anytime.</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <div class="tier">Free</div>
+      <div class="price">&pound;0 <span>/ month</span></div>
+      <div class="desc">For testing and prototyping</div>
+      <ul>
+        <li>100 parses / day</li>
+        <li>10 requests / minute</li>
+        <li>5MB file limit</li>
+        <li>All document types</li>
+        <li>Community support</li>
+      </ul>
+      <a href="#tryit" class="btn btn-secondary">Get started</a>
+    </div>
+    <div class="price-card featured">
+      <div class="tag">POPULAR</div>
+      <div class="tier">Pro</div>
+      <div class="price">&pound;49 <span>/ month</span></div>
+      <div class="desc">For production apps and agencies</div>
+      <ul>
+        <li>5,000 parses / day</li>
+        <li>60 requests / minute</li>
+        <li>25MB file limit</li>
+        <li>Batch processing (20 docs)</li>
+        <li>Priority support</li>
+        <li>Usage dashboard</li>
+      </ul>
+      <a href="#tryit" class="btn btn-primary">Start free trial</a>
+    </div>
+    <div class="price-card">
+      <div class="tier">Enterprise</div>
+      <div class="price">&pound;199 <span>/ month</span></div>
+      <div class="desc">For high-volume and custom needs</div>
+      <ul>
+        <li>50,000 parses / day</li>
+        <li>300 requests / minute</li>
+        <li>50MB file limit</li>
+        <li>Custom extraction schemas</li>
+        <li>Dedicated support</li>
+        <li>SLA guarantee</li>
+        <li>On-prem deployment option</li>
+      </ul>
+      <a href="mailto:hello@docmind.io" class="btn btn-secondary">Contact sales</a>
+    </div>
+  </div>
+</div>
+
+<!-- Endpoints -->
+<div class="endpoints" id="endpoints">
+  <h2>API Reference</h2>
+  <div class="endpoint"><div class="endpoint-header"><span class="endpoint-method post">POST</span><span class="endpoint-path">/v1/parse</span><span class="endpoint-desc">Parse a single document (image, PDF, or text)</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="endpoint-method post">POST</span><span class="endpoint-path">/v1/parse/batch</span><span class="endpoint-desc">Parse up to 20 documents in one request</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="endpoint-method post">POST</span><span class="endpoint-path">/v1/chat</span><span class="endpoint-desc">Multi-LLM chat gateway with automatic failover</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="endpoint-method get">GET</span><span class="endpoint-path">/v1/types</span><span class="endpoint-desc">List supported document types and available providers</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="endpoint-method post">POST</span><span class="endpoint-path">/v1/keys</span><span class="endpoint-desc">Create a new API key (admin only)</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="endpoint-method get">GET</span><span class="endpoint-path">/v1/keys</span><span class="endpoint-desc">List all API keys and usage (admin only)</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="endpoint-method get">GET</span><span class="endpoint-path">/v1/usage</span><span class="endpoint-desc">Usage analytics — requests, tokens, latency (admin only)</span></div></div>
+  <div class="endpoint"><div class="endpoint-header"><span class="endpoint-method get">GET</span><span class="endpoint-path">/health</span><span class="endpoint-desc">Health check — status, uptime, available providers</span></div></div>
+</div>
+
+<!-- Try it -->
+<div class="tryit" id="tryit">
+  <h2>Try it now</h2>
+  <p class="sub">Paste receipt or invoice text below. No signup required for the demo.</p>
+  <div class="tryit-box">
+    <div class="tryit-form">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Document type</label>
+          <select id="tryType">
+            <option value="receipt">Receipt</option>
+            <option value="invoice">Invoice</option>
+            <option value="bank_statement">Bank Statement</option>
+            <option value="contract">Contract</option>
+            <option value="general">General</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>API Key</label>
+          <input type="text" id="tryKey" placeholder="dm_f_..." value="">
+        </div>
+        <div class="form-group">
+          <label>Quality</label>
+          <select id="tryQuality">
+            <option value="fast">Fast (cheaper)</option>
+            <option value="best">Best (accurate)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Document text</label>
+        <textarea id="tryText" placeholder="Paste your receipt, invoice, or document text here...
+
+Example:
+TESCO EXPRESS
+123 HIGH STREET, LONDON
+VAT REG: 220 4323 45
+
+Milk 1.15
+Bread 0.89
+Butter 1.75
+Chicken breast 4.50
+6x Eggs 1.80
+
+SUBTOTAL 10.09
+VAT @20% 2.02
+TOTAL 12.11
+
+VISA **** 4521
+CONTACTLESS
+21/05/2026 14:32"></textarea>
+      </div>
+      <button class="btn btn-primary" onclick="tryParse()" id="tryBtn">Parse document</button>
+    </div>
+    <div id="tryResult"><pre id="tryResultPre"></pre></div>
+  </div>
+</div>
+
+</div>
+
+<footer>
+  <p>DocMind API &mdash; Built for developers who ship. &copy; 2026</p>
+</footer>
+
+<script>
+const CODE_EXAMPLES = [
+// cURL
+`<span class="cmt"># Parse a receipt image</span>
+curl -X POST <span class="str">https://api.docmind.io/v1/parse</span> \\
+  -H <span class="str">"Authorization: Bearer dm_p_your_key"</span> \\
+  -F <span class="str">"file=@receipt.jpg"</span> \\
+  -F <span class="str">"type=receipt"</span> \\
+  -F <span class="str">"quality=fast"</span>
+
+<span class="cmt"># Or parse text directly</span>
+curl -X POST <span class="str">https://api.docmind.io/v1/parse</span> \\
+  -H <span class="str">"Authorization: Bearer dm_p_your_key"</span> \\
+  -H <span class="str">"Content-Type: application/json"</span> \\
+  -d <span class="str">'{"type":"receipt","text":"TESCO\\nMilk 1.15\\nTOTAL 1.15"}'</span>`,
+
+// Python
+`<span class="key">import</span> requests
+
+response = requests.post(
+    <span class="str">"https://api.docmind.io/v1/parse"</span>,
+    headers={<span class="str">"Authorization"</span>: <span class="str">"Bearer dm_p_your_key"</span>},
+    json={
+        <span class="str">"type"</span>: <span class="str">"receipt"</span>,
+        <span class="str">"text"</span>: open(<span class="str">"receipt.txt"</span>).read(),
+        <span class="str">"quality"</span>: <span class="str">"fast"</span>
+    }
+)
+
+data = response.json()
+print(f<span class="str">"Merchant: {data['data']['merchant']}"</span>)
+print(f<span class="str">"Total: {data['data']['currency']} {data['data']['total']}"</span>)
+print(f<span class="str">"VAT: {data['data']['tax']}"</span>)
+
+<span class="cmt"># Or upload an image</span>
+with open(<span class="str">"receipt.jpg"</span>, <span class="str">"rb"</span>) as f:
+    response = requests.post(
+        <span class="str">"https://api.docmind.io/v1/parse"</span>,
+        headers={<span class="str">"Authorization"</span>: <span class="str">"Bearer dm_p_your_key"</span>},
+        files={<span class="str">"file"</span>: f},
+        data={<span class="str">"type"</span>: <span class="str">"receipt"</span>}
+    )`,
+
+// Node.js
+`<span class="key">const</span> response = <span class="key">await</span> fetch(<span class="str">'https://api.docmind.io/v1/parse'</span>, {
+  method: <span class="str">'POST'</span>,
+  headers: {
+    <span class="str">'Authorization'</span>: <span class="str">'Bearer dm_p_your_key'</span>,
+    <span class="str">'Content-Type'</span>: <span class="str">'application/json'</span>,
+  },
+  body: JSON.stringify({
+    type: <span class="str">'invoice'</span>,
+    text: invoiceText,
+    quality: <span class="str">'best'</span>,
+  }),
+});
+
+<span class="key">const</span> { data, meta } = <span class="key">await</span> response.json();
+
+console.log(<span class="str">\`Invoice #\${data.invoice_number}\`</span>);
+console.log(<span class="str">\`Vendor: \${data.vendor.name}\`</span>);
+console.log(<span class="str">\`Total: \${data.currency} \${data.total}\`</span>);
+console.log(<span class="str">\`Parsed in \${meta.latency_ms}ms via \${meta.provider}\`</span>);`,
+
+// Response
+`{
+  <span class="key">"id"</span>: <span class="str">"a1b2c3d4-e5f6-7890-abcd-ef1234567890"</span>,
+  <span class="key">"type"</span>: <span class="str">"receipt"</span>,
+  <span class="key">"data"</span>: {
+    <span class="key">"merchant"</span>: <span class="str">"Tesco Express"</span>,
+    <span class="key">"date"</span>: <span class="str">"2026-05-21"</span>,
+    <span class="key">"currency"</span>: <span class="str">"GBP"</span>,
+    <span class="key">"subtotal"</span>: <span class="num">10.09</span>,
+    <span class="key">"tax"</span>: <span class="num">2.02</span>,
+    <span class="key">"tax_rate"</span>: <span class="str">"20%"</span>,
+    <span class="key">"total"</span>: <span class="num">12.11</span>,
+    <span class="key">"payment_method"</span>: <span class="str">"contactless"</span>,
+    <span class="key">"items"</span>: [
+      { <span class="key">"description"</span>: <span class="str">"Milk"</span>, <span class="key">"quantity"</span>: <span class="num">1</span>, <span class="key">"unit_price"</span>: <span class="num">1.15</span>, <span class="key">"total"</span>: <span class="num">1.15</span> },
+      { <span class="key">"description"</span>: <span class="str">"Bread"</span>, <span class="key">"quantity"</span>: <span class="num">1</span>, <span class="key">"unit_price"</span>: <span class="num">0.89</span>, <span class="key">"total"</span>: <span class="num">0.89</span> }
+    ],
+    <span class="key">"category"</span>: <span class="str">"food"</span>,
+    <span class="key">"confidence"</span>: <span class="num">0.95</span>
+  },
+  <span class="key">"meta"</span>: {
+    <span class="key">"provider"</span>: <span class="str">"anthropic"</span>,
+    <span class="key">"model"</span>: <span class="str">"claude-haiku-4-20250414"</span>,
+    <span class="key">"latency_ms"</span>: <span class="num">1240</span>,
+    <span class="key">"tokens"</span>: { <span class="key">"input"</span>: <span class="num">380</span>, <span class="key">"output"</span>: <span class="num">420</span> }
+  }
+}`
+];
+
+function showTab(i) {
+  document.querySelectorAll('.code-tab').forEach((t,j) => t.classList.toggle('active', j===i));
+  document.getElementById('codeDisplay').innerHTML = CODE_EXAMPLES[i];
+}
+showTab(0);
+
+async function tryParse() {
+  const btn = document.getElementById('tryBtn');
+  const resultDiv = document.getElementById('tryResult');
+  const resultPre = document.getElementById('tryResultPre');
+  const text = document.getElementById('tryText').value.trim();
+  const type = document.getElementById('tryType').value;
+  const key = document.getElementById('tryKey').value.trim();
+  const quality = document.getElementById('tryQuality').value;
+
+  if (!text) { alert('Paste some document text first'); return; }
+  if (!key) { alert('Enter your API key'); return; }
+
+  btn.textContent = 'Parsing...';
+  btn.disabled = true;
+  resultDiv.style.display = 'block';
+  resultPre.textContent = 'Processing...';
+
+  try {
+    const res = await fetch('/v1/parse', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key },
+      body: JSON.stringify({ type, text, quality }),
+    });
+    const data = await res.json();
+    resultPre.textContent = JSON.stringify(data, null, 2);
+  } catch (e) {
+    resultPre.textContent = 'Error: ' + e.message;
+  }
+
+  btn.textContent = 'Parse document';
+  btn.disabled = false;
+}
+</script>
+</body>
+</html>
