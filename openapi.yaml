@@ -1,0 +1,369 @@
+openapi: 3.0.3
+info:
+  title: DocMind API
+  description: |
+    AI Document Intelligence — upload receipts, invoices, bank statements, contracts.
+    Get structured JSON back. One API. Any LLM provider (Claude, GPT, Gemini).
+
+    ## What it does
+    DocMind parses any document into clean, structured JSON. Upload a photo of a receipt
+    and get back merchant, items, totals, VAT, category. Upload an invoice and get line items,
+    vendor/client details, payment terms. Upload a contract and get key terms, obligations, risks.
+
+    ## Supported document types
+    - **Receipts** — merchant, items, totals, VAT, category
+    - **Invoices** — line items, vendor/client, payment terms, VAT
+    - **Bank Statements** — all transactions extracted and categorized
+    - **Contracts** — key terms, obligations, risks, red flags
+    - **General** — any document: entities, key-value pairs, tables, summary
+
+    ## Pricing
+    - **Free**: 50 parses/month (enough to test and integrate)
+    - **Pro ($29/mo)**: 1,000 parses/month
+    - **Business ($99/mo)**: 10,000 parses/month
+    - **Enterprise**: Custom pricing
+
+    Powered by Konomi Architecture. Member of the AI Craftspeople Guild.
+  version: 1.0.0
+  contact:
+    name: AI Native Solutions
+    url: https://sjgant80-hub.github.io/ai-nativesolutions/
+  license:
+    name: Proprietary
+
+servers:
+  - url: https://docmind-api.up.railway.app
+    description: Production (Railway)
+
+tags:
+  - name: Parse
+    description: Document parsing endpoints
+  - name: Chat
+    description: Conversational AI endpoint
+  - name: Info
+    description: Service information
+  - name: Admin
+    description: API key management (admin only)
+
+paths:
+  /health:
+    get:
+      tags: [Info]
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                    example: 1.0.0
+                  providers:
+                    type: array
+                    items:
+                      type: string
+                    example: [anthropic, openai, google]
+                  uptime:
+                    type: number
+                    example: 12345.67
+
+  /v1/types:
+    get:
+      tags: [Info]
+      summary: List supported document types and providers
+      operationId: listTypes
+      responses:
+        '200':
+          description: Available document types and AI providers
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  types:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                          example: receipt
+                        description:
+                          type: string
+                          example: "Receipts -- extract merchant, items, totals, VAT, category"
+                  providers:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: anthropic
+                        name:
+                          type: string
+                          example: "Anthropic (Claude)"
+
+  /v1/parse:
+    post:
+      tags: [Parse]
+      summary: Parse a document into structured JSON
+      description: |
+        Upload a document (image, PDF, or text) and get structured data back.
+        Supports three input modes:
+        1. File upload (multipart/form-data)
+        2. JSON body with text content
+        3. JSON body with base64-encoded image
+      operationId: parseDocument
+      security:
+        - RapidAPIKey: []
+        - BearerAuth: []
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Document file (image or PDF, max 50MB)
+                type:
+                  type: string
+                  enum: [receipt, invoice, bank_statement, contract, general]
+                  default: general
+                provider:
+                  type: string
+                  enum: [anthropic, openai, google]
+                  default: anthropic
+                quality:
+                  type: string
+                  enum: [fast, best]
+                  default: fast
+                instructions:
+                  type: string
+                  description: Custom extraction instructions
+                context:
+                  type: string
+                  description: Additional context for better extraction
+                max_tokens:
+                  type: integer
+                  default: 4096
+          application/json:
+            schema:
+              type: object
+              properties:
+                text:
+                  type: string
+                  description: Document text content
+                image_base64:
+                  type: string
+                  description: Base64-encoded image
+                image_mime:
+                  type: string
+                  description: MIME type of base64 image
+                  example: image/jpeg
+                type:
+                  type: string
+                  enum: [receipt, invoice, bank_statement, contract, general]
+                  default: general
+                provider:
+                  type: string
+                  enum: [anthropic, openai, google]
+                quality:
+                  type: string
+                  enum: [fast, best]
+                context:
+                  type: string
+                max_tokens:
+                  type: integer
+      responses:
+        '200':
+          description: Document parsed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ParseResult'
+        '400':
+          description: No document provided
+        '401':
+          description: Authentication required
+        '429':
+          description: Rate limit exceeded
+
+  /v1/parse/batch:
+    post:
+      tags: [Parse]
+      summary: Parse multiple documents in one request
+      description: Upload up to 20 documents for batch parsing. All get the same type and provider settings.
+      operationId: batchParse
+      security:
+        - RapidAPIKey: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                files:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  maxItems: 20
+                type:
+                  type: string
+                  enum: [receipt, invoice, bank_statement, contract, general]
+                  default: general
+                quality:
+                  type: string
+                  enum: [fast, best]
+                provider:
+                  type: string
+                  enum: [anthropic, openai, google]
+      responses:
+        '200':
+          description: Batch results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  type:
+                    type: string
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        filename:
+                          type: string
+                        status:
+                          type: string
+                          enum: [success, error]
+                        data:
+                          type: object
+                        error:
+                          type: string
+                  count:
+                    type: integer
+
+  /v1/chat:
+    post:
+      tags: [Chat]
+      summary: Conversational AI chat
+      description: Send messages to get AI responses. Supports multi-turn conversations with system prompts.
+      operationId: chat
+      security:
+        - RapidAPIKey: []
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    required: [role, content]
+                    properties:
+                      role:
+                        type: string
+                        enum: [user, assistant, system]
+                      content:
+                        type: string
+                system:
+                  type: string
+                  description: System prompt
+                provider:
+                  type: string
+                  enum: [anthropic, openai, google]
+                model:
+                  type: string
+                  description: Specific model ID override
+                quality:
+                  type: string
+                  enum: [fast, best]
+                max_tokens:
+                  type: integer
+                  default: 4096
+      responses:
+        '200':
+          description: Chat response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  response:
+                    type: string
+                  meta:
+                    $ref: '#/components/schemas/Meta'
+
+components:
+  securitySchemes:
+    RapidAPIKey:
+      type: apiKey
+      in: header
+      name: X-RapidAPI-Key
+      description: Your RapidAPI application key
+    BearerAuth:
+      type: http
+      scheme: bearer
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-Api-Key
+
+  schemas:
+    ParseResult:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [receipt, invoice, bank_statement, contract, general]
+        data:
+          type: object
+          description: Structured extraction result (shape depends on document type)
+        meta:
+          $ref: '#/components/schemas/Meta'
+
+    Meta:
+      type: object
+      properties:
+        provider:
+          type: string
+        model:
+          type: string
+        latency_ms:
+          type: integer
+        tokens:
+          type: object
+          properties:
+            input:
+              type: integer
+            output:
+              type: integer
+        processing_time_ms:
+          type: integer
